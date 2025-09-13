@@ -5,25 +5,36 @@ from .models import OtpModel
 from datetime import datetime, timedelta
 from django.utils import timezone
 from rest_framework.response import Response
+from django.contrib.auth.hashers import make_password, check_password
 
 # local imports
 from .otp_generator import ran_otp
 from .models import OtpModel
 from .serializers import OtpValidatorSerializer
+from _applib.email_sender import send_otp_email
 
 
 class OtpSenderView(APIView):
     def post(self,request):
         data=request.data
+        
         current_time=timezone.now()
         duration= timedelta(minutes=2)
         generated_otp= ran_otp()
+        
         otp_instance= OtpModel.objects.create(
-            user_id=data.get("user_id"),
-            otp_code=generated_otp,
+            user_email=data.get("user_email"),
+            user_name=data.get("user_name"),
+            otp_code=make_password(str(generated_otp)),
             message=data.get("message"),
             expires_at=current_time + duration,
         ) 
+        
+        send_otp_email(
+            user_mail=data.get("user_email"),
+            otp=generated_otp
+        )
+        
         return Response(
             {"message": "OTP sent successfully."},
         )
