@@ -55,3 +55,28 @@ class UserRegistrationView(APIView):
                 {"message": "Registration failed", "errors": serializer.errors},
                 status=400
             )
+
+class UserLoginView(APIView):
+    def post(self, request):
+        data= request.data
+        
+        username_or_email=data.get("username_or_email")
+        password=data.get("password")
+
+        if "@" in username_or_email:
+            # Login with email
+            user_obj = UserModel.objects.filter(email=username_or_email).first()
+        else:
+            # Login with username
+            user_obj = UserModel.objects.filter(user_name=username_or_email).first()
+        
+        if user_obj and check_password(password, user_obj.password):
+            return Response(
+                {"message": "Login successful", "data": {"user_name": user_obj.user_name}},
+                status=200
+            )
+        else:
+            return Response(
+                {"message": "Invalid credentials"},
+                status=401
+            )
