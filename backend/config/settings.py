@@ -111,8 +111,8 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-EMAIL_HOST_USER = 'sheikhmuhammad2002@gmail.com'  # Replace with your Gmail
-EMAIL_HOST_PASSWORD = 'ghkc jcad nbon dxoo'       # Use App Password (not Gmail password)
+EMAIL_HOST_USER = ''  # Replace with your Gmail
+EMAIL_HOST_PASSWORD = ''       # Use App Password (not Gmail password)
 
 
 # Internationalization
