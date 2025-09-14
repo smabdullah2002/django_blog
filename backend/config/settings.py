@@ -1,18 +1,19 @@
 
 from pathlib import Path
 from decouple import config
+from django.core.management.utils import get_random_secret_key
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-wbw#raabxjw@i+3=wx@j((!-mx5w^(df*$#hr)2d=ae^4i0ti1'
+SECRET_KEY = config('SECRET_KEY', default=get_random_secret_key())
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1').split(',')
 
 
 # Application definition
@@ -103,7 +104,7 @@ else: # production
     EMAIL_USE_TLS = True
 
     EMAIL_HOST_USER = config('EMAIL_HOST_USER')  # Replace with your Gmail
-    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')       # Use App Password (not Gmail password)
+    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD') # Use App Password (not Gmail password)
 
 
 # Internationalization
