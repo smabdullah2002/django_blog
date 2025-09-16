@@ -3,10 +3,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth.hashers import make_password, check_password
 import requests
-
+from django.utils import timezone
+from datetime import timedelta
 
 # local imports
-from .models import UserModel
+from .models import UserModel, FailedLoginAttempt
 from .serializers import UserRegistrationSerializer
 from _applib.email_sender import send_otp_email
 
@@ -62,6 +63,20 @@ class UserLoginView(APIView):
         
         username_or_email=data.get("username_or_email")
         password=data.get("password")
+        ip_address=request.META.get('REMOTE_ADDR')
+        
+        print("IP Address:", ip_address)
+        
+        attempt, created= FailedLoginAttempt.objects.get_or_create(
+            username_or_email=username_or_email,
+            ip_address=ip_address
+        )
+        
+        if attempt.is_blocked():
+            return Response(
+                {"message": "Too many failed login attempts. Please try again later."},
+                status=429
+            )
 
         if "@" in username_or_email:
             # Login with email
@@ -69,14 +84,22 @@ class UserLoginView(APIView):
         else:
             # Login with username
             user_obj = UserModel.objects.filter(user_name=username_or_email).first()
-        
         if user_obj and check_password(password, user_obj.password):
+            
+            # Reset failed attempts on successful login
+            attempt.attempts = 0
+            attempt.save()
+            print("Login successful")
             return Response(
                 {"message": "Login successful", "data": {"user_name": user_obj.user_name}},
                 status=200
             )
         else:
+            # Increment failed attempts on failed login
+            attempt.attempts += 1
+            attempt.last_attempt = timezone.now()
+            attempt.save()
             return Response(
-                {"message": "Invalid credentials"},
+                {"message": "Invalid username/email or password"},
                 status=401
             )

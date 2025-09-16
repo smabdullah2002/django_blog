@@ -19,6 +19,24 @@ class OtpSenderView(APIView):
     def post(self,request):
         data=request.data
         
+        
+        # Check if an OTP was sent recently
+        last_otp= OtpModel.objects.filter(
+            user_email=data.get("user_email")
+        ).order_by("-created_at").first()
+        
+        if last_otp and last_otp.status=="Initialize":
+            time_difference= timezone.now()- last_otp.created_at
+            
+            if time_difference< timedelta(minutes=2):
+                return Response(
+                    {"message": "Please wait before requesting a new OTP."},
+                    status=400
+                )
+            
+        
+        
+        # Expire all previous OTPs for this user
         OtpModel.objects.filter(
             user_email=data.get("user_email"),
             status="Initialize"

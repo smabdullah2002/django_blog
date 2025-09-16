@@ -1,5 +1,7 @@
 from django.db import models
 from _applib.model_choice_fields import Role
+from django.utils import timezone
+from datetime import timedelta
 
 class UserModel(models.Model):
     email = models.EmailField(max_length=100, unique=True, blank=False, null=False)
@@ -18,4 +20,16 @@ class UserModel(models.Model):
         verbose_name = "User_table"
         verbose_name_plural = "Users_table"
         db_table = "users_table"
+
+
+class FailedLoginAttempt(models.Model):
+    username_or_email = models.CharField(max_length=150)
+    ip_address = models.GenericIPAddressField()
+    attempts = models.IntegerField(default=0)
+    last_attempt = models.DateTimeField(auto_now=True)
+    
+    def is_blocked(self):
+        block_time= timezone.now() - timedelta(minutes=10)
+        return self.attempts >=5 and self.last_attempt > block_time
+        
     
